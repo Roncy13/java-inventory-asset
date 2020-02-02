@@ -18,6 +18,7 @@ public class BaseModel {
 	protected String selectQry = "";
 	protected ResultSet result;
 	protected List<String> columns = new ArrayList<String>();
+	protected PreparedStatement prepStmt;
 	
 	public BaseModel(String table) {
 		this.table = table;
@@ -83,10 +84,8 @@ public class BaseModel {
 
 	public void setColumns() {
 		String query = selectQry.length() > 0 ? selectQry : "*";
-		
-		System.out.println(String.format("%s %s", query, this.table));
-		
 		ResultSet rs;
+		
 		try {
 			rs = this.statement.executeQuery(String.format("SELECT %s FROM %s", query, this.table));
 			ResultSetMetaData rsmd = rs.getMetaData();
@@ -122,21 +121,45 @@ public class BaseModel {
 	     }
 	}
 	
-	protected ResultSet fetchAll() {
-		String query = String.format("SELECT * FROM %s", this.table);
+	public HashMap<String, String> findOne(String id) {
+		String query = String.format("SELECT %s FROM %s where id = ?", this.selectQry ,this.table);
+		HashMap<String, String> result = new HashMap<String, String>();
 		
 		try {
-			this.result = this.statement.executeQuery(query);
+			this.prepStmt = this.connection.prepareStatement(query);
+			this.prepStmt.setString(1, id);
+			this.result = this.prepStmt.executeQuery();
 			
-		} catch (Exception e) {
+			if (this.result.next()) {
+				result = this.fetchRowValues();
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		return this.result;
+		return result;
+	}
+	
+	public HashMap<String, String> fetchRowValues() {
+		HashMap<String, String> hashMap = new HashMap<String, String>();
+		
+		for(int keyIndex = 0; keyIndex < this.columns.size(); keyIndex++) {
+			String keyName = this.columns.get(keyIndex);
+			
+			try {
+				hashMap.put(keyName, (this.result.getString(keyName)));
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return hashMap;
 	}
 	
 	public List<HashMap<String, String>> getAll() {
-		String query = String.format("SELECT * FROM %s", this.table);
+		String query = String.format("SELECT %s FROM %s", this.selectQry ,this.table);
 		
 		List<HashMap<String, String>> uoms = new ArrayList<HashMap<String, String>>();
 		
@@ -144,14 +167,7 @@ public class BaseModel {
 			this.result = this.statement.executeQuery(query);
 			
 			while(this.result.next()) {
-				HashMap<String, String> hashMap = new HashMap<String, String>();
-				
-				for(int keyIndex = 0; keyIndex < this.columns.size(); keyIndex++) {
-					String keyName = this.columns.get(keyIndex);
-					
-					hashMap.put(keyName, (this.result.getString(keyName)));
-				}
-				
+				HashMap<String, String> hashMap = this.fetchRowValues();
 				uoms.add(hashMap);
 			}
 		} catch (Exception e) {

@@ -18,6 +18,6 @@ import Core.BaseModel;
 public class UomModel extends BaseModel {
 	
 	public UomModel() {
-		super("uoms", "id, amount, description");
+		super("uoms", "id, amount, description, updated_at");
 	}
 }

@@ -1,7 +1,7 @@
 package Core;
 
 import java.sql.*;
-
+import java.text.SimpleDateFormat;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,10 +12,14 @@ import java.net.URL;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
-public class MySqlConfig {
+import inventory.asset.pup.UomDao;
+
+public class BaseModel {
 	
 	private MySqlProperties properties = new MySqlProperties();
 	protected Connection connection;
@@ -23,7 +27,7 @@ public class MySqlConfig {
 	protected String table;
 	protected ResultSet result;
 	
-	public MySqlConfig(String table) {
+	public BaseModel(String table) {
 		
 		this.table = table;
 		try {
@@ -43,7 +47,7 @@ public class MySqlConfig {
 			Properties prop = new Properties();
 			String propFileName = "database.properties";
 	
-			inputStream = MySqlConfig.class.getClassLoader().getResourceAsStream(propFileName);
+			inputStream = BaseModel.class.getClassLoader().getResourceAsStream(propFileName);
 	
 			if (inputStream != null) {
 				prop.load(inputStream);
@@ -84,5 +88,18 @@ public class MySqlConfig {
 		 catch(Exception e) {
 	         e.printStackTrace();
 	     }
+	}
+	
+	protected ResultSet fetchAll() {
+		String query = String.format("SELECT * FROM %s", this.table);
+		
+		try {
+			this.result = this.statement.executeQuery(query);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return this.result;
 	}
 }

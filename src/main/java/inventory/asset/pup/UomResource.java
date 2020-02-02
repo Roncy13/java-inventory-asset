@@ -1,6 +1,7 @@
 package inventory.asset.pup;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -28,7 +29,7 @@ public class UomResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getIt(@Context HttpHeaders httpHeaders) {
     	
-    	List<UomDao> uoms = new ArrayList<UomDao>();
+    	List<HashMap<String, String>> uoms = new ArrayList<HashMap<String, String>>();
     	
     	uoms = this.uomModel.getAll();
     	

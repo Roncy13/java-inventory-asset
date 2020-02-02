@@ -3,39 +3,71 @@ package inventory.asset.pup;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-import Core.MySqlConfig;
+import Core.BaseModel;
 
-public class UomModel extends MySqlConfig {
+public class UomModel extends BaseModel {
+	
+	List<String> columns = new ArrayList<String>();
+	String selectQry = "";
 
 	public UomModel() {
 		super("uoms");
+		
+		this.selectQry = "id, amount, description";
+		this.setColumnCount();
+	}
+
+	
+	public void setColumnCount() {
+		String query = selectQry.length() > 0 ? selectQry : "*";
+		
+		ResultSet rs;
+		try {
+			rs = this.statement.executeQuery(String.format("SELECT %s FROM %s", query, this.table));
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int columnCount = rsmd.getColumnCount();
+			
+			
+			
+			for(int i = 1; i <= columnCount; i++) {
+				String name = rsmd.getColumnName(i);
+				this.columns.add(name);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
-	public List<UomDao> getAll() {
+	public List<HashMap<String, String>> getAll() {
 		String query = String.format("SELECT * FROM %s", this.table);
 		
-		List<UomDao> uoms = new ArrayList<UomDao>();
+		List<HashMap<String, String>> uoms = new ArrayList<HashMap<String, String>>();
 		
 		try {
 			this.result = this.statement.executeQuery(query);
 			
 			while(this.result.next()) {
-				UomDao uom = new UomDao();
+				HashMap<String, String> hashMap = new HashMap<String, String>();
 				
-				uom.amount = this.result.getFloat("amount");
-				uom.id = this.result.getString("id");
-				uom.description = this.result.getString("description");
-				uom.created_at = new SimpleDateFormat("yyyy-MM-dd").parse(this.result.getString("created_at"));   ;
-				uom.updated_at = new SimpleDateFormat("yyyy-MM-dd").parse(this.result.getString("updated_at"));
+				for(int keyIndex = 0; keyIndex < this.columns.size(); keyIndex++) {
+					String keyName = this.columns.get(keyIndex);
+					
+					hashMap.put(keyName, (this.result.getString(keyName)));
+				}
 				
-				uoms.add(uom);
+				uoms.add(hashMap);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
